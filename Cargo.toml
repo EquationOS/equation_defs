@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 axaddrspace = { git = "https://github.com/arceos-hypervisor/axaddrspace.git" }
 memory_addr = "0.3"
+bitmaps = { version = "3.2.1", default-features = false }
