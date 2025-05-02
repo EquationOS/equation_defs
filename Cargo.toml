@@ -1,0 +1,8 @@
+[package]
+name = "equation_defs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axaddrspace = { git = "https://github.com/arceos-hypervisor/axaddrspace.git" }
+memory_addr = "0.3"
