@@ -1,5 +1,7 @@
 use axaddrspace::{GuestPhysAddr, GuestVirtAddr};
-use memory_addr::PAGE_SIZE_1G;
+use memory_addr::{PAGE_SIZE_1G, align_up_4k};
+
+use crate::{InstanceInnerRegion, InstanceSharedRegion, ProcessInnerRegion};
 
 /* Guest Process Virtual Address Space Layout (in GVA).*/
 
@@ -33,13 +35,21 @@ pub const GUEST_PT_ROOT_GPA: GuestPhysAddr = GuestPhysAddr::from_usize(0xff80_00
 pub const INSTANCE_SHARED_REGION_BASE_GPA: GuestPhysAddr =
     GuestPhysAddr::from_usize(0xff00_0000_0000);
 /// Instance inner region base address in GPA.
-pub const INSTANCE_INNER_REGION_BASE_GPA: GuestPhysAddr =
-    GuestPhysAddr::from_usize(0xff00_0000_1000);
+pub const INSTANCE_INNER_REGION_BASE_GPA: GuestPhysAddr = GuestPhysAddr::from_usize(
+    INSTANCE_SHARED_REGION_BASE_GPA.as_usize()
+        + align_up_4k(core::mem::size_of::<InstanceSharedRegion>()),
+);
 /// Process inner region base address in GPA.
-pub const PROCESS_INNER_REGION_BASE_GPA: GuestPhysAddr =
-    GuestPhysAddr::from_usize(0xff00_0000_2000);
+pub const PROCESS_INNER_REGION_BASE_GPA: GuestPhysAddr = GuestPhysAddr::from_usize(
+    INSTANCE_INNER_REGION_BASE_GPA.as_usize()
+        + align_up_4k(core::mem::size_of::<InstanceInnerRegion>()),
+);
+
 /// Guest Process's GPA view of the EPTP list region on current CPU, only mapped in gate processes.
-pub const GP_EPTP_LIST_REGION_BASE_GPA: GuestPhysAddr = GuestPhysAddr::from_usize(0xff00_0000_3000);
+pub const GP_EPTP_LIST_REGION_BASE_GPA: GuestPhysAddr = GuestPhysAddr::from_usize(
+    PROCESS_INNER_REGION_BASE_GPA.as_usize()
+        + align_up_4k(core::mem::size_of::<ProcessInnerRegion>()),
+);
 
 /// (Only used for coarse-grained segmentation mapping)
 ///

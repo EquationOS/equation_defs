@@ -12,6 +12,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "allocator"
+version = "0.1.1"
+source = "git+https://github.com/arceos-org/allocator.git?tag=v0.1.1#1d5b7a1b4fd8db4c9c9cea4e6012d15d42e2bf40"
+dependencies = [
+ "bitmap-allocator",
+ "cfg-if",
+]
+
+[[package]]
 name = "axaddrspace"
 version = "0.1.0"
 source = "git+https://github.com/arceos-hypervisor/axaddrspace.git#2ed4d076e01f966710bd6480131abd3a9ffb8930"
@@ -57,10 +66,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c8214115b7bf84099f1309324e63141d4c5d7cc26862f97a0a857dbefe165bd"
 
 [[package]]
+name = "bitmap-allocator"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5553d824a3564e1c242975cfc962d15e6299bfa4a90c44c14208673c16df51f3"
+dependencies = [
+ "bit_field",
+]
+
+[[package]]
 name = "bitmaps"
 version = "3.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1d084b0137aaa901caf9f1e8b21daa6aa24d41cd806e111335541eff9683bd6"
 
 [[package]]
 name = "cfg-if"
@@ -84,7 +100,10 @@ checksum = "361a90feb7004eca4019fb28352a9465666b24f840f5c3cddf0ff13920590b89"
 name = "equation_defs"
 version = "0.1.0"
 dependencies = [
+ "allocator",
  "axaddrspace",
+ "bit_field",
+ "bitmap-allocator",
  "bitmaps",
  "memory_addr",
 ]
@@ -104,8 +123,6 @@ checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 [[package]]
 name = "memory_addr"
 version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5438b8df0f13e16e1f46140de247695a95952a5a4479e47197a8711bf1063373"
 
 [[package]]
 name = "memory_set"

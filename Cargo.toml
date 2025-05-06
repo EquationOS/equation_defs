@@ -7,3 +7,12 @@ edition = "2024"
 axaddrspace = { git = "https://github.com/arceos-hypervisor/axaddrspace.git" }
 memory_addr = "0.3"
 bitmaps = { version = "3.2.1", default-features = false }
+allocator = { git = "https://github.com/arceos-org/allocator.git", tag = "v0.1.1", features = [
+    "bitmap",
+] }
+bitmap-allocator = { version = "0.2" }
+bit_field = { version = "0.10" }
+
+[patch.crates-io]
+bitmaps = { path = "../../crates/bitmaps" }
+memory_addr = { path = "../../crates/memory_addr/memory_addr" }

@@ -1,3 +1,7 @@
+use memory_addr::VirtAddr;
+
+use crate::bitmap_allocator::SegmentBitmapPageAllocator;
+
 #[repr(C)]
 pub struct ProcessInnerRegion {
     /// The process ID of the process that owns this region.
@@ -5,14 +9,27 @@ pub struct ProcessInnerRegion {
     /// Manage LibOS's memory addrspace at 2MB/1GB granularity.
     /// If zero, it means One2One mapping.
     pub mm_region_granularity: usize,
-    /// Memory page index incremented from 0.
-    pub mm_page_idx: usize,
-    /// Current normal memory region base address in GPA.
-    pub mm_region_base: usize,
+    pub mm_frame_allocator: SegmentBitmapPageAllocator,
     /// Page table page index incremented from 1 (the first is used for page table root).
     pub pt_page_idx: usize,
     /// Current page table region base address in GPA.
     pub pt_region_base: usize,
+}
+
+impl ProcessInnerRegion {
+    pub fn from_raw_addr_mut(addr: usize) -> &'static mut Self {
+        let addr = VirtAddr::from_usize(addr);
+        // SAFETY: The caller must ensure that the address is valid and points to a ProcessInnerRegion.
+        unsafe { addr.as_mut_ptr_of::<Self>().as_mut() }
+            .expect("Failed to convert raw pointer to ProcessInnerRegion")
+    }
+
+    pub fn from_raw_addr(addr: usize) -> &'static Self {
+        let addr = VirtAddr::from_usize(addr);
+        // SAFETY: The caller must ensure that the address is valid and points to a ProcessInnerRegion.
+        unsafe { addr.as_ptr_of::<Self>().as_ref() }
+            .expect("Failed to convert raw pointer to ProcessInnerRegion")
+    }
 }
 
 #[repr(C)]
