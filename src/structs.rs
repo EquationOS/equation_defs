@@ -1,6 +1,10 @@
 use memory_addr::VirtAddr;
 
 use crate::bitmap_allocator::SegmentBitmapPageAllocator;
+use crate::{MM_FRAME_ALLOCATOR_SIZE, PT_FRAME_ALLOCATOR_SIZE};
+
+pub type MMFrameAllocator = SegmentBitmapPageAllocator<MM_FRAME_ALLOCATOR_SIZE>;
+pub type PTFrameAllocator = SegmentBitmapPageAllocator<PT_FRAME_ALLOCATOR_SIZE>;
 
 #[repr(C)]
 pub struct ProcessInnerRegion {
@@ -9,11 +13,12 @@ pub struct ProcessInnerRegion {
     /// Manage LibOS's memory addrspace at 2MB/1GB granularity.
     /// If zero, it means One2One mapping.
     pub mm_region_granularity: usize,
-    pub mm_frame_allocator: SegmentBitmapPageAllocator,
-    /// Page table page index incremented from 1 (the first is used for page table root).
-    pub pt_page_idx: usize,
-    /// Current page table region base address in GPA.
-    pub pt_region_base: usize,
+    /// 2MB (4k*512) for each segment.
+    /// 64 * 2MB = 128 MB in total.
+    pub mm_frame_allocator: MMFrameAllocator,
+    /// 2MB (4k*512) for each segment.
+    /// 2 * 2MB = 4 MB in total.
+    pub pt_frame_allocator: PTFrameAllocator,
 }
 
 impl ProcessInnerRegion {

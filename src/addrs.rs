@@ -3,9 +3,18 @@ use memory_addr::{PAGE_SIZE_1G, PAGE_SIZE_4K, align_up_4k};
 
 use crate::{InstanceInnerRegion, InstanceSharedRegion, ProcessInnerRegion};
 
+#[derive(Debug, Clone, Copy)]
+pub enum FrameType {
+    Normal = 0,
+    PT,
+}
+
 pub const SHIM_PHYS_VIRT_OFFSET: usize = 0xffff_ff80_0000_0000;
 
 /* Guest Process Virtual Address Space Layout (in GVA).*/
+
+pub const GUEST_MEMORY_REGION_BASE_GVA: GuestVirtAddr =
+    GuestVirtAddr::from_usize(GUEST_MEM_REGION_BASE.as_usize() + SHIM_PHYS_VIRT_OFFSET);
 
 /// 0x70_0000_0000 + 0xffff_ff80_0000_0000
 pub const GUEST_PT_BASE_GVA: GuestVirtAddr = GuestVirtAddr::from_usize(0xffff_fff0_0000_0000);

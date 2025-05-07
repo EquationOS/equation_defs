@@ -5,7 +5,9 @@ extern crate alloc;
 mod addrs;
 mod bitmap;
 pub mod bitmap_allocator;
-mod header;
+mod configs;
+mod structs;
 
 pub use addrs::*;
-pub use header::*;
+pub use configs::*;
+pub use structs::*;

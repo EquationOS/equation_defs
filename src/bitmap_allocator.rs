@@ -2,7 +2,7 @@ use alloc::vec::Vec;
 
 use allocator::{AllocError, AllocResult, BaseAllocator};
 use bitmap_allocator::BitAlloc;
-use bitmaps::Bitmap;
+use bitmaps::{Bitmap, Bits, BitsImpl};
 use memory_addr::{PAGE_SIZE_1G as MAX_ALIGN_1GB, align_down, align_up, is_aligned};
 
 use crate::bitmap::{BitAlloc512, SegmentBitAllocCascade};
@@ -42,7 +42,10 @@ pub trait PageAllocator: BaseAllocator {
 ///
 /// The `self.page_size` must be a power of two.
 #[repr(C)]
-pub struct SegmentBitmapPageAllocator {
+pub struct SegmentBitmapPageAllocator<const SIZE: usize>
+where
+    BitsImpl<{ SIZE }>: Bits,
+{
     base: usize,
     segment_granularity: usize,
 
@@ -52,13 +55,14 @@ pub struct SegmentBitmapPageAllocator {
 
     /// Mark if the physical memory backend is allocated for this sub segments.
     /// 1 indicates allocated, 0 indicates not allocated.
-    allocated_bitset: Bitmap<64>,
-    /// 2MB (4k*512) for each segment.
-    /// 128 MB in total.
-    inner: SegmentBitAllocCascade<BitAlloc512, 64>,
+    allocated_bitset: Bitmap<SIZE>,
+    inner: SegmentBitAllocCascade<BitAlloc512, SIZE>,
 }
 
-impl SegmentBitmapPageAllocator {
+impl<const SIZE: usize> SegmentBitmapPageAllocator<{ SIZE }>
+where
+    BitsImpl<{ SIZE }>: Bits,
+{
     pub fn base(&self) -> usize {
         self.base
     }
@@ -140,7 +144,10 @@ impl SegmentBitmapPageAllocator {
     }
 }
 
-impl BaseAllocator for SegmentBitmapPageAllocator {
+impl<const SIZE: usize> BaseAllocator for SegmentBitmapPageAllocator<{ SIZE }>
+where
+    BitsImpl<{ SIZE }>: Bits,
+{
     /// Just init first segment.
     fn init(&mut self, start: usize, size: usize) {
         assert!(self.page_size.is_power_of_two());
@@ -165,7 +172,10 @@ impl BaseAllocator for SegmentBitmapPageAllocator {
     }
 }
 
-impl PageAllocator for SegmentBitmapPageAllocator {
+impl<const SIZE: usize> PageAllocator for SegmentBitmapPageAllocator<{ SIZE }>
+where
+    BitsImpl<{ SIZE }>: Bits,
+{
     fn alloc_pages(&mut self, num_pages: usize, align_pow2: usize) -> AllocResult<usize> {
         // Check if the alignment is valid.
         if align_pow2 > MAX_ALIGN_1GB || !is_aligned(align_pow2, self.page_size) {

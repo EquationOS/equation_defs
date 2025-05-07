@@ -28,10 +28,9 @@ use bitmap_allocator::BitAlloc;
 /// ```
 pub type BitAlloc512 = BitAllocCascade8<BitAlloc64>;
 
-type BitAlloc4K = SegmentBitAllocCascade<BitAlloc512, 8>; // 512 * 8 = 4096
-
-type BitAlloc32K = BitAllocCascade8<BitAlloc4K>; // 512 * 8 * 8 = 32768
-pub type BitAlloc256K = BitAllocCascade8<BitAlloc32K>; // 512 * 8 * 8 * 8 = 512 * 512
+// type BitAlloc4K = SegmentBitAllocCascade<BitAlloc512, 8>; // 512 * 8 = 4096
+// type BitAlloc32K = BitAllocCascade8<BitAlloc4K>; // 512 * 8 * 8 = 32768
+// pub type BitAlloc256K = BitAllocCascade8<BitAlloc32K>; // 512 * 8 * 8 * 8 = 512 * 512
 
 #[repr(C)]
 pub struct SegmentBitAllocCascade<T: BitAlloc, const SIZE: usize>
