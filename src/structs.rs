@@ -1,10 +1,18 @@
-use memory_addr::VirtAddr;
+use core::mem::size_of;
 
+use memory_addr::{PAGE_SIZE_4K, VirtAddr, align_up_4k};
+
+use crate::addrs::PROCESS_INNER_REGION_BASE_VA;
 use crate::bitmap_allocator::SegmentBitmapPageAllocator;
 use crate::{MM_FRAME_ALLOCATOR_SIZE, PT_FRAME_ALLOCATOR_SIZE};
 
 pub type MMFrameAllocator = SegmentBitmapPageAllocator<MM_FRAME_ALLOCATOR_SIZE>;
 pub type PTFrameAllocator = SegmentBitmapPageAllocator<PT_FRAME_ALLOCATOR_SIZE>;
+
+pub const EPTP_LIST_REGION_SIZE: usize = PAGE_SIZE_4K;
+pub const PROCESS_INNER_REGION_SIZE: usize = align_up_4k(size_of::<ProcessInnerRegion>());
+pub const INSTANCE_INNER_REGION_SIZE: usize = align_up_4k(size_of::<InstanceInnerRegion>());
+pub const INSTANCE_SHARED_REGION_SIZE: usize = align_up_4k(size_of::<InstanceSharedRegion>());
 
 #[repr(C)]
 pub struct ProcessInnerRegion {
@@ -35,6 +43,30 @@ impl ProcessInnerRegion {
         unsafe { addr.as_ptr_of::<Self>().as_ref() }
             .expect("Failed to convert raw pointer to ProcessInnerRegion")
     }
+}
+
+pub fn process_inner_region() -> &'static ProcessInnerRegion {
+    unsafe { (PROCESS_INNER_REGION_BASE_VA as *mut ProcessInnerRegion).as_ref() }.unwrap()
+}
+
+pub fn process_inner_region_mut() -> &'static mut ProcessInnerRegion {
+    unsafe { (PROCESS_INNER_REGION_BASE_VA as *mut ProcessInnerRegion).as_mut() }.unwrap()
+}
+
+pub fn mm_region_granularity() -> usize {
+    process_inner_region().mm_region_granularity
+}
+
+pub fn mm_frame_allocator() -> &'static mut MMFrameAllocator {
+    &mut process_inner_region_mut().mm_frame_allocator
+}
+
+pub fn pt_frame_allocator() -> &'static mut PTFrameAllocator {
+    &mut process_inner_region_mut().pt_frame_allocator
+}
+
+pub fn process_id() -> usize {
+    process_inner_region().process_id
 }
 
 #[repr(C)]

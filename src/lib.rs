@@ -1,12 +1,14 @@
 #![no_std]
 
-extern crate alloc;
+#[macro_use]
+extern crate log;
 
 mod addrs;
 mod bitmap;
-pub mod bitmap_allocator;
 mod configs;
 mod structs;
+
+pub mod bitmap_allocator;
 
 pub use addrs::*;
 pub use configs::*;

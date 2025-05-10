@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-axaddrspace = { git = "https://github.com/arceos-hypervisor/axaddrspace.git" }
+log = "0.4"
 memory_addr = "0.3"
 bitmaps = { version = "3.2.1", default-features = false }
 allocator = { git = "https://github.com/arceos-org/allocator.git", tag = "v0.1.1", features = [

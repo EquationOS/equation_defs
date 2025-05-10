@@ -1,4 +1,4 @@
-use alloc::vec::Vec;
+// use alloc::vec::Vec;
 
 use allocator::{AllocError, AllocResult, BaseAllocator};
 use bitmap_allocator::BitAlloc;
@@ -126,21 +126,33 @@ where
         true
     }
 
-    pub fn try_decrease_segment(&mut self) {
-        let segment_idxes: Vec<usize> = self.allocated_bitset.into_iter().collect();
+    pub fn get_allocated_bitset(&self) -> &Bitmap<SIZE> {
+        &self.allocated_bitset
+    }
 
-        for segment_idx in segment_idxes {
-            if !self.inner.segment_is_free(segment_idx) {
-                continue;
-            }
-            let start = segment_idx * self.segment_granularity;
-            let end = start + self.segment_granularity;
-            // Remove the inner allocator for the segment.
-            self.inner.remove(start..end);
-
-            // Mark the segment as deallocated.
-            self.allocated_bitset.set(segment_idx, false);
+    pub fn segment_is_free(&self, segment_idx: usize) -> bool {
+        // Check if the segment is already free.
+        if !self.allocated_bitset.get(segment_idx) {
+            return true;
         }
+
+        self.inner.segment_is_free(segment_idx)
+    }
+
+    pub fn free_segment(&mut self, segment_idx: usize) {
+        // Check if the segment is already free.
+        if !self.allocated_bitset.get(segment_idx) {
+            warn!("Try to free unallocated segment: {segment_idx}");
+            return;
+        }
+
+        // Remove the inner allocator for the segment.
+        let start = segment_idx * self.segment_granularity;
+        let end = start + self.segment_granularity;
+        self.inner.remove(start..end);
+
+        // Mark the segment as deallocated.
+        self.allocated_bitset.set(segment_idx, false);
     }
 }
 
