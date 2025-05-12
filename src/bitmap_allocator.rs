@@ -1,5 +1,3 @@
-// use alloc::vec::Vec;
-
 use allocator::{AllocError, AllocResult, BaseAllocator};
 use bitmap_allocator::BitAlloc;
 use bitmaps::{Bitmap, Bits, BitsImpl};
