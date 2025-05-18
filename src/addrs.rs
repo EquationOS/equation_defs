@@ -19,22 +19,22 @@ pub const GUEST_MEMORY_REGION_BASE_VA: usize = GUEST_MEM_REGION_BASE_PA + SHIM_P
 /// 0x70_0000_0000 + 0xffff_ff80_0000_0000
 pub const GUEST_PT_BASE_VA: usize = 0xffff_fff0_0000_0000;
 
-/// Guest Process's GVA view of the EPTP list region on current CPU, only mapped in gate processes.
-pub const GP_EPT_LIST_REGION_VA: usize = GUEST_PT_BASE_VA - EPTP_LIST_REGION_SIZE;
-
 /// Process inner region base address in GVA.
 /// This is a process specific region, shared by all threads in the same process.
-pub const PROCESS_INNER_REGION_BASE_VA: usize = GP_EPT_LIST_REGION_VA - PROCESS_INNER_REGION_SIZE;
+pub const PROCESS_INNER_REGION_BASE_VA: usize = GUEST_PT_BASE_VA - PROCESS_INNER_REGION_SIZE;
 
 /// Instance inner region base address in GVA.
 /// This is a instance specific region, shared by all processes in the same instance.
 pub const INSTANCE_INNER_REGION_BASE_VA: usize =
     PROCESS_INNER_REGION_BASE_VA - INSTANCE_INNER_REGION_SIZE;
 
+/// Guest Process's GVA view of the EPTP list region on current CPU, only mapped in gate processes.
+pub const GP_EPT_LIST_REGION_VA: usize = INSTANCE_INNER_REGION_BASE_VA - EPTP_LIST_REGION_SIZE;
+
 /// Instance shared region base address in GVA.
 /// This is a percpu specific region, shared by all instances on the same CPU.
 pub const INSTANCE_SHARED_REGION_BASE_VA: usize =
-    INSTANCE_INNER_REGION_BASE_VA - INSTANCE_SHARED_REGION_SIZE;
+    GP_EPT_LIST_REGION_VA - INSTANCE_SHARED_REGION_SIZE;
 
 /*  Guest Process Physical Address Space Layout (in GPA).*/
 
