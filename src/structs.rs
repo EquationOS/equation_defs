@@ -9,11 +9,12 @@ use crate::{MM_FRAME_ALLOCATOR_SIZE, PT_FRAME_ALLOCATOR_SIZE};
 pub type MMFrameAllocator = SegmentBitmapPageAllocator<MM_FRAME_ALLOCATOR_SIZE>;
 pub type PTFrameAllocator = SegmentBitmapPageAllocator<PT_FRAME_ALLOCATOR_SIZE>;
 
-pub const EPTP_LIST_REGION_SIZE: usize = PAGE_SIZE_4K;
 pub const PROCESS_INNER_REGION_SIZE: usize =
     align_up(size_of::<ProcessInnerRegion>(), PAGE_SIZE_2M);
 pub const INSTANCE_INNER_REGION_SIZE: usize = align_up_4k(size_of::<InstanceInnerRegion>());
-pub const INSTANCE_SHARED_REGION_SIZE: usize = align_up_4k(size_of::<InstanceSharedRegion>());
+
+pub const EPTP_LIST_REGION_SIZE: usize = PAGE_SIZE_4K;
+pub const INSTANCE_PERCPU_REGION_SIZE: usize = align_up_4k(size_of::<InstancePerCPURegion>());
 
 #[repr(C, align(4096))]
 pub struct ProcessInnerRegion {
@@ -86,12 +87,68 @@ impl ProcessInnerRegion {
     }
 }
 
+#[repr(C)]
+pub struct InstanceInnerRegion {
+    /// The instance ID of the instance that owns this region.
+    pub instance_id: u64,
+}
+
+impl InstanceInnerRegion {
+    pub fn from_raw_addr_mut(addr: usize) -> &'static mut Self {
+        let addr = VirtAddr::from_usize(addr);
+        // SAFETY: The caller must ensure that the address is valid and points to a InstanceInnerRegion.
+        unsafe { addr.as_mut_ptr_of::<Self>().as_mut() }
+            .expect("Failed to convert raw pointer to InstanceInnerRegion")
+    }
+
+    pub fn from_raw_addr(addr: usize) -> &'static Self {
+        let addr = VirtAddr::from_usize(addr);
+        // SAFETY: The caller must ensure that the address is valid and points to a InstanceInnerRegion.
+        unsafe { addr.as_ptr_of::<Self>().as_ref() }
+            .expect("Failed to convert raw pointer to InstanceInnerRegion")
+    }
+}
+
+/// The structure of the memory region.
+#[repr(C, packed)]
+#[derive(Debug, Clone, Copy, Default)]
+pub struct InstancePerCPURegion {
+    /// The ID of the CPU (vCPU).
+    pub cpu_id: u64,
+    /// The ID of the instance that are running on this CPU.
+    pub instance_id: u64,
+    /// The ID of the process that are running on this CPU.
+    pub process_id: u64,
+}
+
+impl InstancePerCPURegion {
+    pub fn from_raw_addr_mut(addr: usize) -> &'static mut Self {
+        let addr = VirtAddr::from_usize(addr);
+        // SAFETY: The caller must ensure that the address is valid and points to a InstancePerCPURegion.
+        unsafe { addr.as_mut_ptr_of::<Self>().as_mut() }
+            .expect("Failed to convert raw pointer to InstancePerCPURegion")
+    }
+
+    pub fn from_raw_addr(addr: usize) -> &'static Self {
+        let addr = VirtAddr::from_usize(addr);
+        // SAFETY: The caller must ensure that the address is valid and points to a InstancePerCPURegion.
+        unsafe { addr.as_ptr_of::<Self>().as_ref() }
+            .expect("Failed to convert raw pointer to InstancePerCPURegion")
+    }
+}
 pub fn process_inner_region() -> &'static ProcessInnerRegion {
-    unsafe { (PROCESS_INNER_REGION_BASE_VA as *mut ProcessInnerRegion).as_ref() }.unwrap()
+    ProcessInnerRegion::from_raw_addr(PROCESS_INNER_REGION_BASE_VA)
 }
 
 pub fn process_inner_region_mut() -> &'static mut ProcessInnerRegion {
-    unsafe { (PROCESS_INNER_REGION_BASE_VA as *mut ProcessInnerRegion).as_mut() }.unwrap()
+    ProcessInnerRegion::from_raw_addr_mut(PROCESS_INNER_REGION_BASE_VA)
+}
+
+pub fn instance_percpu_region() -> &'static InstancePerCPURegion {
+    InstancePerCPURegion::from_raw_addr(PROCESS_INNER_REGION_BASE_VA)
+}
+pub fn instance_percpu_region_mut() -> &'static mut InstancePerCPURegion {
+    InstancePerCPURegion::from_raw_addr_mut(PROCESS_INNER_REGION_BASE_VA)
 }
 
 pub fn mm_region_granularity() -> usize {
@@ -114,20 +171,6 @@ pub fn process_id() -> usize {
     process_inner_region().process_id
 }
 
-#[repr(C)]
-pub struct InstanceInnerRegion {
-    /// The instance ID of the instance that owns this region.
-    pub instance_id: u64,
-    /// The process number.
-    pub process_num: u64,
-}
-
-/// The structure of the memory region.
-#[repr(C, packed)]
-#[derive(Debug, Clone, Copy, Default)]
-pub struct InstanceSharedRegion {
-    /// The ID of the instance that are running on this CPU.
-    pub instance_id: u64,
-    /// The ID of the process that are running on this CPU.
-    pub process_id: u64,
+pub fn cpu_id() -> usize {
+    instance_percpu_region().cpu_id as usize
 }

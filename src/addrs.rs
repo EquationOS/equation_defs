@@ -2,7 +2,7 @@
 use memory_addr::PAGE_SIZE_1G;
 
 use crate::structs::{
-    EPTP_LIST_REGION_SIZE, INSTANCE_INNER_REGION_SIZE, INSTANCE_SHARED_REGION_SIZE,
+    EPTP_LIST_REGION_SIZE, INSTANCE_INNER_REGION_SIZE, INSTANCE_PERCPU_REGION_SIZE,
     PROCESS_INNER_REGION_SIZE,
 };
 
@@ -31,10 +31,11 @@ pub const INSTANCE_INNER_REGION_BASE_VA: usize =
 /// Guest Process's GVA view of the EPTP list region on current CPU, only mapped in gate processes.
 pub const GP_EPT_LIST_REGION_VA: usize = INSTANCE_INNER_REGION_BASE_VA - EPTP_LIST_REGION_SIZE;
 
-/// Instance shared region base address in GVA.
-/// This is a percpu specific region, shared by all instances on the same CPU.
-pub const INSTANCE_SHARED_REGION_BASE_VA: usize =
-    GP_EPT_LIST_REGION_VA - INSTANCE_SHARED_REGION_SIZE;
+/// Guest Process's GVA view of the per CPU instance shared region,
+/// which is used to store the instance ID of the instance that are running on this CPU,
+/// only mapped in gate processes.
+pub const GP_INSTANCE_PERCPU_REGION_BASE_VA: usize =
+    GP_EPT_LIST_REGION_VA - INSTANCE_PERCPU_REGION_SIZE;
 
 /*  Guest Process Physical Address Space Layout (in GPA).*/
 
@@ -44,18 +45,18 @@ pub const SHIM_BASE_PA: usize = 0x0;
 /// Guest Process's GPA view of the guest page table, which will be set as the process's CR3.
 pub const GUEST_PT_ROOT_PA: usize = 0x70_0000_0000;
 
-/// Instance shared region base address in GPA.
-pub const INSTANCE_SHARED_REGION_BASE_PA: usize = 0xff00_0000_0000;
 /// Instance inner region base address in GPA.
-pub const INSTANCE_INNER_REGION_BASE_PA: usize =
-    INSTANCE_SHARED_REGION_BASE_PA + INSTANCE_SHARED_REGION_SIZE;
+pub const INSTANCE_INNER_REGION_BASE_PA: usize = 0xff00_0000_0000;
 /// Process inner region base address in GPA.
 pub const PROCESS_INNER_REGION_BASE_PA: usize =
     INSTANCE_INNER_REGION_BASE_PA + INSTANCE_INNER_REGION_SIZE;
 
+/// Instance shared region base address in GPA.
+pub const GP_INSTANCE_PERCPU_REGION_BASE_PA: usize =
+    PROCESS_INNER_REGION_BASE_PA + PROCESS_INNER_REGION_SIZE;
 /// Guest Process's GPA view of the EPTP list region on current CPU, only mapped in gate processes.
 pub const GP_EPTP_LIST_REGION_BASE_PA: usize =
-    PROCESS_INNER_REGION_BASE_PA + PROCESS_INNER_REGION_SIZE;
+    GP_INSTANCE_PERCPU_REGION_BASE_PA + INSTANCE_PERCPU_REGION_SIZE;
 
 /// (Only used for coarse-grained segmentation mapping)
 ///
