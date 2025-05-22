@@ -23,9 +23,9 @@ pub struct ProcessInnerRegion {
     /// Whether this is the primary process.
     pub is_primary: bool,
     /// The entry point of the process.
-    pub entry: usize,
+    pub user_entry: usize,
     /// The stack pointer of the process.
-    pub stack_top: usize,
+    pub user_stack_top: usize,
     /// Manage LibOS's memory addrspace at 2MB/1GB granularity.
     /// If zero, it means One2One mapping.
     pub mm_region_granularity: usize,
@@ -42,8 +42,8 @@ impl core::fmt::Debug for ProcessInnerRegion {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "ProcessInnerRegion [{}]", self.process_id)?;
         writeln!(f, "  is_primary: {}", self.is_primary)?;
-        writeln!(f, "  entry: {:#x}", self.entry)?;
-        writeln!(f, "  stack_top: {:#x}", self.stack_top)?;
+        writeln!(f, "  entry: {:#x}", self.user_entry)?;
+        writeln!(f, "  stack_top: {:#x}", self.user_stack_top)?;
         writeln!(
             f,
             "  mm_region_granularity: {:#x}",
