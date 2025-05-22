@@ -32,6 +32,8 @@ pub const SHIM_INSTANCE_ID: usize = 0;
 /// starts from 1.
 pub const FIRST_PROCESS_ID: usize = 1;
 
+pub const MAX_INSTANCES_NUM: usize = 512;
+
 #[repr(usize)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum InstanceType {

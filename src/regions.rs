@@ -4,7 +4,8 @@ use memory_addr::{PAGE_SIZE_2M, PAGE_SIZE_4K, VirtAddr, align_up, align_up_4k};
 
 use crate::addrs::PROCESS_INNER_REGION_BASE_VA;
 use crate::bitmap_allocator::SegmentBitmapPageAllocator;
-use crate::{MM_FRAME_ALLOCATOR_SIZE, PT_FRAME_ALLOCATOR_SIZE};
+use crate::run_queue::EqTaskQueue;
+use crate::{MM_FRAME_ALLOCATOR_SIZE, PERCPU_REGION_BASE_VA, PT_FRAME_ALLOCATOR_SIZE};
 
 pub type MMFrameAllocator = SegmentBitmapPageAllocator<MM_FRAME_ALLOCATOR_SIZE>;
 pub type PTFrameAllocator = SegmentBitmapPageAllocator<PT_FRAME_ALLOCATOR_SIZE>;
@@ -14,7 +15,7 @@ pub const PROCESS_INNER_REGION_SIZE: usize =
 pub const INSTANCE_INNER_REGION_SIZE: usize = align_up_4k(size_of::<InstanceInnerRegion>());
 
 pub const EPTP_LIST_REGION_SIZE: usize = PAGE_SIZE_4K;
-pub const INSTANCE_PERCPU_REGION_SIZE: usize = align_up_4k(size_of::<InstancePerCPURegion>());
+pub const INSTANCE_PERCPU_REGION_SIZE: usize = align_up_4k(size_of::<PerCPURegion>());
 
 #[repr(C, align(4096))]
 pub struct ProcessInnerRegion {
@@ -110,18 +111,21 @@ impl InstanceInnerRegion {
 }
 
 /// The structure of the memory region.
-#[repr(C, packed)]
-#[derive(Debug, Clone, Copy, Default)]
-pub struct InstancePerCPURegion {
+#[repr(C)]
+pub struct PerCPURegion {
     /// The ID of the CPU (vCPU).
     pub cpu_id: u64,
     /// The ID of the instance that are running on this CPU.
     pub instance_id: u64,
     /// The ID of the process that are running on this CPU.
     pub process_id: u64,
+    /// Ready queue of the CPU.
+    pub ready_queue: EqTaskQueue,
+    /// Run queue of the CPU.
+    pub run_queue: EqTaskQueue,
 }
 
-impl InstancePerCPURegion {
+impl PerCPURegion {
     pub fn from_raw_addr_mut(addr: usize) -> &'static mut Self {
         let addr = VirtAddr::from_usize(addr);
         // SAFETY: The caller must ensure that the address is valid and points to a InstancePerCPURegion.
@@ -144,11 +148,12 @@ pub fn process_inner_region_mut() -> &'static mut ProcessInnerRegion {
     ProcessInnerRegion::from_raw_addr_mut(PROCESS_INNER_REGION_BASE_VA)
 }
 
-pub fn instance_percpu_region() -> &'static InstancePerCPURegion {
-    InstancePerCPURegion::from_raw_addr(PROCESS_INNER_REGION_BASE_VA)
+pub fn percpu_region() -> &'static PerCPURegion {
+    PerCPURegion::from_raw_addr(PERCPU_REGION_BASE_VA)
 }
-pub fn instance_percpu_region_mut() -> &'static mut InstancePerCPURegion {
-    InstancePerCPURegion::from_raw_addr_mut(PROCESS_INNER_REGION_BASE_VA)
+
+pub fn percpu_region_mut() -> &'static mut PerCPURegion {
+    PerCPURegion::from_raw_addr_mut(PERCPU_REGION_BASE_VA)
 }
 
 pub fn mm_region_granularity() -> usize {
@@ -172,5 +177,5 @@ pub fn process_id() -> usize {
 }
 
 pub fn cpu_id() -> usize {
-    instance_percpu_region().cpu_id as usize
+    percpu_region().cpu_id as usize
 }
