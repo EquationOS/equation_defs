@@ -85,15 +85,16 @@ impl core::fmt::Debug for EqTaskQueue {
             self.size.load(Ordering::Acquire)
         )?;
         let mut i = self.head.load(Ordering::Acquire);
-        for _ in 0..self.size.load(Ordering::Acquire) {
+        let size = self.size.load(Ordering::Acquire);
+        for j in 0..size {
             let task = self.queue[i % RUN_QUEUE_SIZE].as_ref();
             if let Some(task) = task {
-                writeln!(f, " -> {:?}", task)?;
+                writeln!(f, "[{}] {:?}", j, task)?;
             } else {
-                writeln!(f, " -> None")?;
+                writeln!(f, "[{}] None", j)?;
             }
             i += 1;
         }
-        writeln!(f, "")
+        Ok(())
     }
 }

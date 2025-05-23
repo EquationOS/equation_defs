@@ -10,6 +10,7 @@ mod regions;
 
 pub mod run_queue;
 pub mod task;
+pub mod context;
 
 pub mod bitmap_allocator;
 
